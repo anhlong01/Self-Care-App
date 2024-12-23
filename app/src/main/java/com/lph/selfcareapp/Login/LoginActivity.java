@@ -39,7 +39,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
 //    String url_login = "edoc.clbook-doctor/login.php";
-    String url_login = "https://edoc.cloudkma.fun/book-doctor/login.php";
+    String url_login = "http://10.0.2.2/book-doctor/login.php";
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
