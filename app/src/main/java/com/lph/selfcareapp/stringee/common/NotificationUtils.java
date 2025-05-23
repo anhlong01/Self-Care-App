@@ -17,6 +17,9 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationCompat.Builder;
 
 import com.lph.selfcareapp.R;
+import com.lph.selfcareapp.RescheduleActivity;
+import com.lph.selfcareapp.SeeResultActivity;
+import com.lph.selfcareapp.menu.MedicalTicketActivity;
 import com.lph.selfcareapp.stringee.activity.CallActivity;
 import com.lph.selfcareapp.stringee.service.RejectCallReceiver;
 
@@ -25,7 +28,9 @@ public class NotificationUtils {
     private static volatile NotificationUtils instance;
     private final Context context;
     private final NotificationManager nm;
-
+    private static final String GENERAL_CHANNEL_ID = "general_notifications";
+    private static final String GENERAL_CHANNEL_NAME = "General Notifications";
+    private static final int SIMPLE_NOTIFICATION_ID = 1001;
     public NotificationUtils(Context context) {
         this.context = context.getApplicationContext();
         if (VERSION.SDK_INT >= VERSION_CODES.O) {
@@ -157,5 +162,61 @@ public class NotificationUtils {
         builder.setOngoing(true);
         builder.setCategory(NotificationCompat.CATEGORY_SERVICE);
         return builder.build();
+    }
+
+    public void showSimpleNotification(String type, String title, String body) {
+        createGeneralNotificationChannel(); // Đảm bảo channel được tạo
+
+        int flag = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (VERSION.SDK_INT >= VERSION_CODES.S) {
+            flag = PendingIntent.FLAG_IMMUTABLE;
+        }
+        Intent intent = null;
+        if(type.equals("new_appointment")) {
+            intent = new Intent(context, MedicalTicketActivity.class); // Thay bằng Activity bạn muốn mở
+            // Hoặc Intent intent = new Intent(context, AppointmentDetailActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK); // Quan trọng cho thông báo
+        }else if(type.equals("new_report")){
+            intent = new Intent(context, SeeResultActivity.class); // Thay bằng Activity bạn muốn mở
+            // Hoặc Intent intent = new Intent(context, AppointmentDetailActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK); // Quan trọng cho thông báo
+        }else if(type.equals("reschedule")){
+            intent = new Intent(context, RescheduleActivity.class); // Thay bằng Activity bạn muốn mở
+            // Hoặc Intent intent = new Intent(context, AppointmentDetailActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK); // Quan trọng cho thông báo
+        }
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                context,
+                (int) System.currentTimeMillis(), // Request code duy nhất
+                intent,
+                flag
+        );
+
+
+        Builder builder = new Builder(context, GENERAL_CHANNEL_ID)
+                .setSmallIcon(R.mipmap.ic_launcher) // Icon thông báo của bạn
+                .setContentTitle(title)
+                .setContentText(body)
+                .setPriority(NotificationCompat.PRIORITY_HIGH) // Quan trọng: PRIORITY_HIGH cho Heads-up
+                .setAutoCancel(true) // Tự động hủy khi click
+                .setContentIntent(pendingIntent)
+                .setDefaults(NotificationCompat.DEFAULT_ALL); // Âm thanh, rung, đèn LED mặc định
+
+        // Hiển thị thông báo với một ID duy nhất
+        // Sử dụng một ID cụ thể, ví dụ Constant.APPOINTMENT_NOTIFICATION_ID nếu bạn muốn cập nhật/hủy nó sau
+        nm.notify(Constant.APPOINTMENT_NOTIFICATION_ID, builder.build()); // Đảm bảo Constant.APPOINTMENT_NOTIFICATION_ID là một int duy nhất
+    }
+
+    private void createGeneralNotificationChannel() {
+        if (VERSION.SDK_INT >= VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    GENERAL_CHANNEL_ID,
+                    GENERAL_CHANNEL_NAME,
+                    NotificationManager.IMPORTANCE_HIGH // Vẫn dùng HIGH để có Heads-up nếu bạn muốn
+            );
+            channel.setDescription("Channel for general app notifications like new appointments.");
+            nm.createNotificationChannel(channel);
+        }
     }
 }

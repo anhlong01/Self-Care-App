@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -26,6 +27,7 @@ import retrofit2.Response;
 public class ConfirmCallActivity extends AppCompatActivity {
     TextView navText;
     ImageView back;
+    String jwt;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,23 +53,24 @@ public class ConfirmCallActivity extends AppCompatActivity {
         priceText = priceText +"đ";
         binding.price.setText(priceText);
         String orderInfo = "call " + id + " "+ callDoctor.getDocid();
+        jwt = sp.getString("jwt", "");
         binding.payButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RetrofitInstance.getService().createPayment(callDoctor.getPrice(),System.currentTimeMillis()/1000,orderInfo).enqueue(new Callback<ReturnData>() {
+                RetrofitInstance.getService(jwt).createPayment(callDoctor.getPrice(),orderInfo).enqueue(new Callback<ReturnData>() {
                     @Override
                     public void onResponse(Call<ReturnData> call, Response<ReturnData> response) {
                         ReturnData returnData = response.body();
                         Intent i = new Intent(ConfirmCallActivity.this, ChooseCallDoctorActivity.class);
                         startActivity(i);
                         Intent i2 = new Intent(Intent.ACTION_VIEW);
-                        i2.setData(Uri.parse(returnData.getData()));
+                        i2.setData(Uri.parse(returnData.getResult().getPaymentUrl()));
                         startActivity(i2);
                     }
 
                     @Override
                     public void onFailure(Call<ReturnData> call, Throwable throwable) {
-
+                        Log.d("VNPAY",throwable.toString());
                     }
                 });
             }

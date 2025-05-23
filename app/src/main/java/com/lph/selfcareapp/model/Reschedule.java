@@ -4,7 +4,10 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 public class Reschedule {
-    @SerializedName("scheduuledate")
+    @SerializedName("id")
+    @Expose
+    private Integer id;
+    @SerializedName("scheduledate")
     @Expose
     private String scheduuledate;
     @SerializedName("pname")
@@ -19,6 +22,14 @@ public class Reschedule {
     @SerializedName("address")
     @Expose
     private String address;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
 
     public String getScheduuledate() {
         return scheduuledate;

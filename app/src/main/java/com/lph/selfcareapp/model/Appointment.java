@@ -1,9 +1,13 @@
 package com.lph.selfcareapp.model;
 
+import androidx.databinding.BaseObservable;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-public class Appointment {
+import java.io.Serializable;
+
+public class Appointment extends BaseObservable implements Serializable {
     @SerializedName("appoid")
     @Expose
     private Integer appoid;
@@ -31,12 +35,60 @@ public class Appointment {
     @SerializedName("endtime")
     @Expose
     private String endtime;
-    @SerializedName("clinic_name")
+    @SerializedName("clinicName")
     @Expose
     private String clinic_name;
     @SerializedName("address")
     @Expose
     private String address;
+    @SerializedName("symptom")
+    @Expose
+    private String symptom;
+
+    private String clinicImage;
+    private String paddress;
+    private String dob;
+    private String sex;
+
+    public String getClinicImage() {
+        return clinicImage;
+    }
+
+    public void setClinicImage(String clinicImage) {
+        this.clinicImage = clinicImage;
+    }
+
+    public String getPaddress() {
+        return paddress;
+    }
+
+    public void setPaddress(String paddress) {
+        this.paddress = paddress;
+    }
+
+    public String getDob() {
+        return dob;
+    }
+
+    public void setDob(String dob) {
+        this.dob = dob;
+    }
+
+    public String getSex() {
+        return sex;
+    }
+
+    public void setSex(String sex) {
+        this.sex = sex;
+    }
+
+    public String getSymptom() {
+        return symptom;
+    }
+
+    public void setSymptom(String symptom) {
+        this.symptom = symptom;
+    }
 
     public Integer getAppoid() {
         return appoid;

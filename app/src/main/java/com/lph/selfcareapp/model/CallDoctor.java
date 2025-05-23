@@ -21,7 +21,7 @@ public class CallDoctor implements Serializable {
     @SerializedName("sname")
     @Expose
     private String sname;
-    @SerializedName("acacdemicrank")
+    @SerializedName("rank")
     @Expose
     private String acacdemicrank;
     @SerializedName("price")
@@ -30,9 +30,31 @@ public class CallDoctor implements Serializable {
     @SerializedName("sex")
     @Expose
     private String sex;
-    @SerializedName("call_id")
+    @SerializedName("callid")
     @Expose
     private String callId;
+    @SerializedName("clinicname")
+    @Expose
+    private String clinicName;
+    @SerializedName("address")
+    @Expose
+    private String address;
+
+    public String getClinicName() {
+        return clinicName;
+    }
+
+    public void setClinicName(String clinicName) {
+        this.clinicName = clinicName;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
 
     public Integer getDocid() {
         return docid;

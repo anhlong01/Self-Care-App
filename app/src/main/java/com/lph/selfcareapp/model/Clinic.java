@@ -13,19 +13,19 @@ import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 
 public class Clinic extends BaseObservable implements Serializable {
-    @SerializedName("clinic_id")
+    @SerializedName("clinicId")
     @Expose
     private int clinic_id;
-    @SerializedName("clinic_name")
+    @SerializedName("name")
     @Expose
     private String clinic_name;
     @SerializedName("address")
     @Expose
     private String address;
-    @SerializedName("clinic_image")
+    @SerializedName("image")
     @Expose
     private String clinic_image;
-    @SerializedName("chief_id")
+    @SerializedName("chiefId")
     @Expose
     private int chief_id;
     @SerializedName("latitude")
@@ -38,6 +38,8 @@ public class Clinic extends BaseObservable implements Serializable {
     public static void loadImage(ImageView imageView, String imageUrl){
         Glide.with(imageView.getContext()).load(imageUrl).into(imageView);
     }
+    @SerializedName("distance")
+    @Expose
     private float distance;
 
     @Bindable

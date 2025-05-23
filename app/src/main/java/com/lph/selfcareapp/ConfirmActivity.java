@@ -20,6 +20,7 @@ import com.lph.selfcareapp.model.Doctor;
 import com.lph.selfcareapp.model.ReturnData;
 import com.lph.selfcareapp.model.ScheduleTime;
 import com.lph.selfcareapp.serviceAPI.RetrofitInstance;
+import com.lph.selfcareapp.vnpay.VnpayActivity;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -41,6 +42,7 @@ public class ConfirmActivity extends AppCompatActivity {
     TextView price;
     MaterialButton payBtn;
     TextView textView;
+    String jwt;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -49,9 +51,10 @@ public class ConfirmActivity extends AppCompatActivity {
         Intent intent = getIntent();
         Clinic clinic = (Clinic) intent.getSerializableExtra("clinic");
         Doctor doctor = (Doctor) intent.getSerializableExtra("doctor");
-        String specialty = intent.getStringExtra("specialty");
+        String specialty = doctor.getSpecialtiesName();
         String dateText = intent.getStringExtra("date");
         String timeText = intent.getStringExtra("time");
+        String symptom = intent.getStringExtra("symptom");
         ScheduleTime scheduleTime = (ScheduleTime) intent.getSerializableExtra("schedule");
         clinicname = findViewById(R.id.clinic_name);
         clinicAddress = findViewById(R.id.clinic_address);
@@ -66,30 +69,32 @@ public class ConfirmActivity extends AppCompatActivity {
         price = findViewById(R.id.price);
         payBtn = findViewById(R.id.payButton);
         textView = findViewById(R.id.navText);
-
+        SharedPreferences sp1 = getSharedPreferences("UserData", MODE_PRIVATE);
+        jwt = sp1.getString("jwt", "");
         textView.setText("Xác nhận thanh toán");
         clinicname.setText(clinic.getClinic_name());
         clinicAddress.setText(clinic.getAddress());
-        doctorName.setText(doctor.getDocname());
+        doctorName.setText(doctor.getDocName());
         doctorSpe.setText(specialty);
         date.setText(dateText + " "+timeText);
         String priceText = String.format("%,d", doctor.getPrice());
         priceText = priceText +"đ";
         price.setText(priceText);
-        SharedPreferences sp = getSharedPreferences("UserData", MODE_PRIVATE);
+        SharedPreferences sp = getSharedPreferences("Login", MODE_PRIVATE);
         patientName.setText(sp.getString("fullname",""));
         patientNumber.setText(sp.getString("phone",""));
-        String id = String.valueOf(sp.getInt("id",0));
-        String orderInfo = "book " + id +" "+ scheduleTime.getScheduleId();
+        SharedPreferences sp3 = getSharedPreferences("UserData", MODE_PRIVATE);
+        int id = sp3.getInt("id", 0);
+        String orderInfo =  id +"#"+ scheduleTime.getScheduleId() + "#" + symptom;
         payBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                RetrofitInstance.getService().createPayment(doctor.getPrice(),System.currentTimeMillis()/1000,orderInfo).enqueue(new Callback<ReturnData>() {
+                RetrofitInstance.getService(jwt).createPayment(doctor.getPrice(),orderInfo).enqueue(new Callback<ReturnData>() {
                     @Override
                     public void onResponse(Call<ReturnData> call, Response<ReturnData> response) {
                         ReturnData returnData = response.body();
-                        Intent i = new Intent(Intent.ACTION_VIEW);
-                        i.setData(Uri.parse(returnData.getData()));
+                        Intent i = new Intent(getApplicationContext(), VnpayActivity.class);
+                        i.putExtra("payment_url",returnData.getResult().getPaymentUrl());
                         startActivity(i);
                     }
 

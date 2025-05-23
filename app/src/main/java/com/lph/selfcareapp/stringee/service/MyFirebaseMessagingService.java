@@ -19,7 +19,7 @@ import org.json.JSONObject;
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
     @Override
     public void onNewToken(@NonNull String token) {
-
+        Log.d("Firebase token", "Refreshed token: " + token);
         if (ClientManager.getInstance(this).getStringeeClient() == null) {
             ClientManager.getInstance(this).connect();
         }
@@ -35,6 +35,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     public void onMessageReceived(RemoteMessage remoteMessage) {
         Log.d(Constant.TAG, remoteMessage.getData().toString());
         if (!remoteMessage.getData().isEmpty()) {
+            String messageType = remoteMessage.getData().get("type");
             String pushFromStringee = remoteMessage.getData().get("stringeePushNotification");
             if (pushFromStringee != null) {
                 String data = remoteMessage.getData().get("data");
@@ -54,6 +55,21 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
                     }
                 }
             }
+            else{
+                // Đây là tin nhắn về lịch hẹn mới
+                String title = remoteMessage.getData().get("title");
+                String body = remoteMessage.getData().get("body");
+
+                // Gọi phương thức để hiển thị Local Notification
+                // Bạn đã có NotificationUtils, giờ chúng ta sẽ dùng nó để hiển thị một thông báo chung
+                NotificationUtils.getInstance(this).showSimpleNotification(
+                        messageType,
+                        title != null ? title : "Thông báo mới",
+                        body != null ? body : "Bạn có một thông báo quan trọng."
+                );
+            }
+        }else{
+
         }
     }
 }

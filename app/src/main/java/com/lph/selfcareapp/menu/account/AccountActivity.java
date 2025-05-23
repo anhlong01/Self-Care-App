@@ -1,5 +1,7 @@
 package com.lph.selfcareapp.menu.account;
 
+import static com.lph.selfcareapp.Utils.SecureStorageHelper.clearSessionKey;
+
 import android.Manifest;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,7 +18,10 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -30,25 +35,28 @@ import com.lph.selfcareapp.Utils.BottomNavigationViewHelper;
 import com.lph.selfcareapp.menu.*;
 import com.lph.selfcareapp.menu.account.CustomAdapter;
 
-public class AccountActivity extends AppCompatActivity {
-    private Button logout_btn;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+
+public class AccountActivity extends AppCompatActivity implements FingerprintHelper.FingerprintAuthListener{
+    private RelativeLayout logout_btn;
     private ImageView backButton;
-    private ShapeableImageView avatar;
+    private ImageView avatar;
     private TextView usernameText;
     private ListView account_listview;
-
+    private Switch fingerprintSwitch;
+    private FingerprintHelper fingerprintHelper;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.fragment_account);
 
         // Ánh xạ các thành phần giao diện
-        backButton = findViewById(R.id.backButton);
         avatar = findViewById(R.id.avatar);
         logout_btn = findViewById(R.id.logout_btn);
         usernameText = findViewById(R.id.username);
-        account_listview = findViewById(R.id.account_listview);
-
+        fingerprintSwitch = findViewById(R.id.fingerprint_switch);
+        fingerprintHelper = new FingerprintHelper(this);
         setupNavigationView();
 
         // Lấy username từ SharedPreferences
@@ -56,17 +64,40 @@ public class AccountActivity extends AppCompatActivity {
         String username = sharedPreferences.getString("username", "lephiha");
         usernameText.setText(username);
 
-        // Thiết lập sự kiện cho nút quay lại
-        backButton.setOnClickListener(v -> onBackPressed());
+        Boolean fingerprint = sharedPreferences.getBoolean("fingerprint", false);
+        if(!fingerprint){
+            fingerprintSwitch.setChecked(false);
+        }else{
+            fingerprintSwitch.setChecked(true);
+        }
+
+        fingerprintSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if(isChecked){
+                authenticateWithFingerprint();
+            }else{
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean("fingerprint", false);
+                editor.apply();
+            }
+        });
+
 
         // Thiết lập sự kiện cho ảnh đại diện
         avatar.setOnClickListener(v -> checkPermissionAndOpenImagePicker());
 
         // Thiết lập sự kiện cho nút đăng xuất
-        logout_btn.setOnClickListener(v -> logout());
+        logout_btn.setOnClickListener(v -> {
+            try {
+                logout();
+            } catch (GeneralSecurityException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         // Thiết lập ListView với các mục và sự kiện click
-        setupListView();
+//        setupListView();
     }
 
     private void setupListView() {
@@ -79,84 +110,70 @@ public class AccountActivity extends AppCompatActivity {
                 "Đánh giá ứng dụng",
                 "Chia sẻ ứng dụng",
                 "Một số câu hỏi thường gặp",
-                "Đăng Xuất"
+                "Đăng Xuất",
+                "Đăng nhập vân tay"
         };
 
-        // Các biểu tượng tương ứng
-        int[] itemIcons = {
-                R.drawable.quy_dinh_sd,
-                R.drawable.chinh_sach_bm,
-                R.drawable.dieukhoan,
-                R.drawable.baseline_local_phone_24,
-                R.drawable.danhgia,
-                R.drawable.share,
-                R.drawable.faq,
-                R.drawable.baseline_logout_24
-        };
-
-        // Thiết lập adapter tùy chỉnh cho ListView
-        CustomAdapter adapter = new CustomAdapter(this, itemNames, itemIcons);
-        account_listview.setAdapter(adapter);
 
         // Xử lý sự kiện khi click vào một mục trong ListView
-        account_listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = null;
-                switch (position) {
-                    case 0:
-                        intent = new Intent(AccountActivity.this, UsePolicyActivity.class);
-                        break;
-                    case 1:
-                        intent = new Intent(AccountActivity.this, PrivacyPolicyActivity.class);
-                        break;
-                    case 2:
-                        intent = new Intent(AccountActivity.this, TermServiceActivity.class);
-                        break;
-                    case 3:
-                        intent = new Intent(AccountActivity.this, CallActivity.class);
-                        startActivity(intent);
-                        break;
-                    case 4:
-                        intent = new Intent(AccountActivity.this, RateApp.class);
-                        startActivity(intent);
-                        break;
-                    case 5:
-                        // Tạo Intent để chia sẻ
-                        Intent shareIntent = new Intent(Intent.ACTION_SEND);
-                        shareIntent.setType("text/plain");
-                        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Chia sẻ ứng dụng");
-
-                        // Nội dung chia sẻ
-                        String shareMessage = "Tải ứng dụng SelfCare tại: https://www.selfcare.com";
-                        shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage);
-
-                        // Hiển thị menu chia sẻ với các ứng dụng có thể xử lý
-                        startActivity(Intent.createChooser(shareIntent, "Chia sẻ qua"));
-                        break;
-
-                    case 6:
-                        intent = new Intent(AccountActivity.this, FAQ.class);
-                        break;
-
-                    case 7:
-                        // Xóa thông tin
-                        getApplication().getSharedPreferences("MyPrefs", MODE_PRIVATE).edit().clear().apply();
-
-                        intent = new Intent(AccountActivity.this, LoginActivity.class);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                        startActivity(intent);
-
-                        finish();
-                        break;
-
-                }
-
-                if (intent != null) {
-                    startActivity(intent);
-                }
-            }
-        });
+//        account_listview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                Intent intent = null;
+//                switch (position) {
+//                    case 0:
+//                        intent = new Intent(AccountActivity.this, UsePolicyActivity.class);
+//                        break;
+//                    case 1:
+//                        intent = new Intent(AccountActivity.this, PrivacyPolicyActivity.class);
+//                        break;
+//                    case 2:
+//                        intent = new Intent(AccountActivity.this, TermServiceActivity.class);
+//                        break;
+//                    case 3:
+//                        intent = new Intent(AccountActivity.this, CallActivity.class);
+//                        startActivity(intent);
+//                        break;
+//                    case 4:
+//                        intent = new Intent(AccountActivity.this, RateApp.class);
+//                        startActivity(intent);
+//                        break;
+//                    case 5:
+//                        // Tạo Intent để chia sẻ
+//                        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+//                        shareIntent.setType("text/plain");
+//                        shareIntent.putExtra(Intent.EXTRA_SUBJECT, "Chia sẻ ứng dụng");
+//
+//                        // Nội dung chia sẻ
+//                        String shareMessage = "Tải ứng dụng SelfCare tại: https://www.selfcare.com";
+//                        shareIntent.putExtra(Intent.EXTRA_TEXT, shareMessage);
+//
+//                        // Hiển thị menu chia sẻ với các ứng dụng có thể xử lý
+//                        startActivity(Intent.createChooser(shareIntent, "Chia sẻ qua"));
+//                        break;
+//
+//                    case 6:
+//                        intent = new Intent(AccountActivity.this, FAQ.class);
+//                        break;
+//
+//                    case 7:
+//                        // Xóa thông tin
+//                        getApplication().getSharedPreferences("MyPrefs", MODE_PRIVATE).edit().clear().apply();
+//                        getApplication().getSharedPreferences("Login", MODE_PRIVATE).edit().clear().apply();
+//                        intent = new Intent(AccountActivity.this, LoginActivity.class);
+//                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//                        startActivity(intent);
+//
+//                        finish();
+//                        break;
+//
+//                }
+//
+//                if (intent != null) {
+//                    startActivity(intent);
+//                }
+//            }
+//        });
     }
 
     private void checkPermissionAndOpenImagePicker() {
@@ -186,14 +203,22 @@ public class AccountActivity extends AppCompatActivity {
         }
     }
 
-    private void logout() {
-        SharedPreferences.Editor editor = getSharedPreferences("MyPrefs", MODE_PRIVATE).edit();
-        SharedPreferences.Editor sp=getSharedPreferences("Login", MODE_PRIVATE).edit();
-        sp.remove("isLogedin");
-        editor.remove("username"); // Chỉ xóa dữ liệu đăng nhập
-        editor.apply();
-        sp.apply();
+    private void authenticateWithFingerprint(){
+        if (fingerprintHelper.isFingerprintAvailable()) {
+            fingerprintHelper.showFingerprintDialog(this, this);
+        } else {
+            Toast.makeText(this,
+                    "Thiết bị không hỗ trợ hoặc chưa đăng ký vân tay",
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void logout() throws GeneralSecurityException, IOException {
+        clearSessionKey(AccountActivity.this);
+        SharedPreferences sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE);
+        sharedPreferences.edit().clear().apply();
         Intent intent = new Intent(getApplication(), LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish(); // Kết thúc Activity hiện tại
     }
@@ -206,5 +231,25 @@ public class AccountActivity extends AppCompatActivity {
         Menu menu = tvEx.getMenu();
         MenuItem menuItem = menu.getItem(4);
         menuItem.setChecked(true);
+    }
+
+    @Override
+    public void onAuthenticationSuccessful() {
+        runOnUiThread(() -> {
+            Toast.makeText(this, "Xác thực thành công!", Toast.LENGTH_SHORT).show();
+            getSharedPreferences("UserData", MODE_PRIVATE).edit().putBoolean("fingerprint", true).apply();
+        });
+    }
+
+    @Override
+    public void onAuthenticationError(int errorCode, String errorMessage) {
+        runOnUiThread(() ->
+                Toast.makeText(this, "Lỗi xác thực: " + errorMessage, Toast.LENGTH_SHORT).show());
+    }
+
+    @Override
+    public void onAuthenticationFailed() {
+        runOnUiThread(() ->
+                Toast.makeText(this, "Xác thực thất bại", Toast.LENGTH_SHORT).show());
     }
 }

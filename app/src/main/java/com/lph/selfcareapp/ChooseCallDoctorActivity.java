@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -12,22 +13,19 @@ import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.lph.selfcareapp.fragment.DatLichActivity;
 import com.lph.selfcareapp.model.CallDoctor;
 import com.lph.selfcareapp.serviceAPI.RetrofitInstance;
 import com.lph.selfcareapp.stringee.activity.CallActivity;
-import com.lph.selfcareapp.stringee.activity.StringeeActivity;
 import com.lph.selfcareapp.stringee.common.Constant;
 import com.lph.selfcareapp.stringee.common.PermissionsUtils;
 import com.lph.selfcareapp.stringee.common.Utils;
 import com.lph.selfcareapp.stringee.manager.ClientManager;
-import com.lph.selfcareapp.view.CallDoctorAdapter;
-import com.lph.selfcareapp.viewmodel.ChooseCallDoctorListener;
+import com.lph.selfcareapp.adapter.CallDoctorAdapter;
+import com.lph.selfcareapp.listener.ChooseCallDoctorListener;
 
 import java.util.List;
 
@@ -53,7 +51,8 @@ public class ChooseCallDoctorActivity extends AppCompatActivity implements Choos
         navText.setText("Tư vấn khám bệnh qua video");
         SharedPreferences sp = getSharedPreferences("UserData", MODE_PRIVATE);
         int id = sp.getInt("id",0);
-        RetrofitInstance.getService().getCallDoctor(id).enqueue(new Callback<List<CallDoctor>>() {
+        String jwt = sp.getString("jwt","");
+        RetrofitInstance.getService(jwt).getCallDoctor(id).enqueue(new Callback<List<CallDoctor>>() {
             @Override
             public void onResponse(Call<List<CallDoctor>> call, Response<List<CallDoctor>> response) {
                 doctorList = response.body();
@@ -65,14 +64,14 @@ public class ChooseCallDoctorActivity extends AppCompatActivity implements Choos
 
             @Override
             public void onFailure(Call<List<CallDoctor>> call, Throwable throwable) {
-
+                Log.d("REtrofit", throwable.toString());
             }
         });
     }
 
     @Override
     public void onItemCliked(CallDoctor callDoctor) {
-        Intent intent = new Intent(ChooseCallDoctorActivity.this, ConfirmCallActivity.class);
+        Intent intent = new Intent(ChooseCallDoctorActivity.this, DatLichActivity.class);
         intent.putExtra("callDoctor", callDoctor);
         startActivity(intent);
     }
@@ -86,9 +85,6 @@ public class ChooseCallDoctorActivity extends AppCompatActivity implements Choos
 
         requestPermission();
         makeCall(true,true,callId);
-//        Intent intent = new Intent(ChooseCallDoctorActivity.this, StringeeActivity.class);
-//        intent.putExtra("callId", callId);
-//        startActivity(intent);
     }
 
     private void requestPermission() {

@@ -39,10 +39,12 @@
                 android:layout_height="wrap_content"
                 android:text="Bệnh nhân"
                 android:textSize="20dp"/>
-            <ImageView
-                android:id="@+id/diagImageview"
-                android:layout_width="match_parent"
-                android:layout_height="300dp"/>
+            <Button
+                android:id="@+id/seeDiagnose"
+                android:layout_marginTop="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Xem chẩn đoán"/>
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>

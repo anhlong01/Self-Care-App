@@ -85,15 +85,6 @@
             />
     </com.google.android.material.textfield.TextInputLayout>
 
-    <!-- Spinner for Role Selection -->
-    <Spinner
-        android:id="@+id/roleSpinner"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/passwordTextInput"
-        android:layout_margin="10dp"
-        android:entries="@array/role_options"
-        android:background="@color/blue_btn_bg_pressed_color"/>
 
     <TextView
         android:id="@+id/forgotPassword"
@@ -103,7 +94,7 @@
         android:textSize="14sp"
         android:textColor="#6A1B9A"
         android:minHeight="48dp"
-        android:layout_below="@+id/roleSpinner"
+        android:layout_below="@+id/passwordTextInput"
         android:layout_alignParentEnd="true"
         android:layout_marginEnd="16dp"
         android:clickable="true"

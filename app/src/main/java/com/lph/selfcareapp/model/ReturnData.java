@@ -7,12 +7,9 @@ public class ReturnData {
     @SerializedName("code")
     @Expose
     private String code;
-    @SerializedName("message")
+    @SerializedName("result")
     @Expose
-    private String message;
-    @SerializedName("data")
-    @Expose
-    private String data;
+    private VnpayResult result;
 
     public String getCode() {
         return code;
@@ -22,19 +19,12 @@ public class ReturnData {
         this.code = code;
     }
 
-    public String getMessage() {
-        return message;
+
+    public VnpayResult getResult() {
+        return result;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public String getData() {
-        return data;
-    }
-
-    public void setData(String data) {
-        this.data = data;
+    public void setResult(VnpayResult result) {
+        this.result = result;
     }
 }

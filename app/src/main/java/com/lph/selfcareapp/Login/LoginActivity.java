@@ -14,22 +14,25 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.android.volley.AuthFailureError;
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
+
 import com.google.android.material.textfield.TextInputEditText;
 import com.lph.selfcareapp.MainActivity;
-import com.lph.selfcareapp.MainDoctorActivity;
+import com.lph.selfcareapp.OtpInputActivity;
 import com.lph.selfcareapp.R;
+import com.lph.selfcareapp.dto.LoginRequest;
+import com.lph.selfcareapp.model.ApiResponse;
+import com.lph.selfcareapp.model.LoginResponse;
+import com.lph.selfcareapp.model.LoginResult;
+import com.lph.selfcareapp.model.Patient;
+import com.lph.selfcareapp.model.Role;
+import com.lph.selfcareapp.model.User;
+import com.lph.selfcareapp.serviceAPI.RetrofitInstance;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.Map;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
     TextView signUpRedirect, tv_error, forgotPassword;
@@ -37,9 +40,6 @@ public class LoginActivity extends AppCompatActivity {
     Button loginBtn;
     Spinner roleSpiner;
 
-
-//    String url_login = "edoc.clbook-doctor/login.php";
-    String url_login = "http://10.0.2.2/book-doctor/login.php";
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,13 +72,11 @@ public class LoginActivity extends AppCompatActivity {
         loginBtn = findViewById(R.id.loginBtn);
         tv_error = findViewById(R.id.tv_error);
         forgotPassword = findViewById(R.id.forgotPassword);
-        roleSpiner = findViewById(R.id.roleSpinner);
     }
 
     private void GoLogin() {
         String username = usernameEditText.getText().toString().trim();
         String password = passwordEditText.getText().toString().trim();
-        String selectedRole = roleSpiner.getSelectedItem().toString().toLowerCase(); // Chuyển về chữ thường
 
         if (username.isEmpty()) {
             tv_error.setText("Please Enter Your Username");
@@ -88,101 +86,40 @@ public class LoginActivity extends AppCompatActivity {
             ProgressDialog progressDialog = new ProgressDialog(this);
             progressDialog.setMessage("Loading...");
             progressDialog.show();
-
-            StringRequest stringRequest = new StringRequest(Request.Method.POST, url_login,
-                    response -> {
-                        try {
-                            Log.e("RESPONSE", response);
-                            JSONObject jsonObject = new JSONObject(response);
-                            String success = jsonObject.getString("success");
-
-                            if (success.equals("1")) {
-                                JSONArray jsonArray = jsonObject.getJSONArray("login");
-                                JSONObject object = jsonArray.getJSONObject(0);
-
-                                String objusername = object.getString("username").trim();
-                                String objfullname = object.getString("fullname").trim();
-                                String objemail = object.getString("email").trim();
-                                String objphone = object.getString("phone").trim();
-                                String objrole = object.getString("utype").trim();
-                                String token = "";
-                                if(!object.getString("token").equals(null))
-                                    token = object.getString("token").trim();
-                                int objid = object.getInt("id");
-
-                                // Log vai trò từ server
-                                Log.d("ServerRole", "Role from server: " + objrole);
-
-                                // Lưu thông tin vào SharedPreferences
-                                SharedPreferences sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE);
-                                SharedPreferences.Editor editor = sharedPreferences.edit();
-                                editor.putString("username", objusername);
-                                editor.putString("fullname", objfullname);
-                                editor.putString("email", objemail);
-                                editor.putString("phone", objphone);
-                                editor.putString("utype", objrole);  // Lưu role
-                                editor.putInt("id",objid);
-                                editor.putString("token",token);
-                                editor.apply();
-
-                                // Chuyển hướng dựa vào vai trò
-                                Intent intent;
-                                switch (objrole.toLowerCase()) {  // So sánh không phân biệt hoa thường
-                                    case "doctor":
-                                        SharedPreferences sp=getSharedPreferences("Login", MODE_PRIVATE);
-                                        SharedPreferences.Editor Ed=sp.edit();
-                                        Ed.putBoolean("isLogedin", true);
-                                        Ed.commit();
-                                        intent = new Intent(LoginActivity.this, MainDoctorActivity.class);
-                                        break;
-                                    case "patient":
-                                        SharedPreferences sp2=getSharedPreferences("Login", MODE_PRIVATE);
-                                        SharedPreferences.Editor Ed2=sp2.edit();
-                                        Ed2.putBoolean("isLogedin", true);
-                                        Ed2.commit();
-                                        intent = new Intent(LoginActivity.this, MainActivity.class);
-                                        break;
-                                    case "admin":
-                                        intent = new Intent(LoginActivity.this, MainActivity.class);
-                                        break;
-                                    default:
-                                        Toast.makeText(LoginActivity.this, "Invalid role", Toast.LENGTH_LONG).show();
-                                        progressDialog.dismiss();
-                                        return;
-                                }
-
-                                Toast.makeText(LoginActivity.this, "Welcome " + objfullname, Toast.LENGTH_LONG).show();
-                                progressDialog.dismiss();
-                                startActivity(intent);
-                                finish();
-                            } else {
-                                String message = jsonObject.getString("message");
-                                Toast.makeText(LoginActivity.this, message, Toast.LENGTH_LONG).show();
-                                progressDialog.dismiss();
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                            Toast.makeText(LoginActivity.this, "Error: " + e.toString(), Toast.LENGTH_LONG).show();
-                            progressDialog.dismiss();
-                        }
-                    },
-                    error -> {
-                        Toast.makeText(LoginActivity.this, "Error: " + error.toString(), Toast.LENGTH_LONG).show();
+            LoginRequest loginRequest = new LoginRequest(username, password);
+//            if(selectedRole.equals("patient")){
+                RetrofitInstance.getServiceWithoutAuth().login(loginRequest).enqueue(new Callback<LoginResponse>() {
+                    @Override
+                    public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                         progressDialog.dismiss();
-                    }) {
-                @Override
-                protected Map<String, String> getParams() throws AuthFailureError {
-                    Map<String, String> params = new HashMap<>();
-                    params.put("username", username);
-                    params.put("password", password);
-                    params.put("utype", selectedRole); // Gửi vai trò người dùng chọn
-                    Log.d("LoginParams", "Username: " + username + ", Password: " + password + ", Role: " + selectedRole);
-                    return params;
-                }
-            };
+                        if(response.isSuccessful()){
+                            LoginResponse loginResponse = response.body();
+                            LoginResult authenResult = loginResponse.getResult();
+                            if(authenResult.getAuthenticated()){
+                                Intent intent = new Intent(LoginActivity.this, OtpInputActivity.class);
+                                intent.putExtra("email", username);
+                                startActivity(intent);
+                            }
+                        }
+                        else {
+                            try {
+                                JSONObject jObjError = new JSONObject(response.errorBody().string());
+                                String message = jObjError.get("message").toString();
+                                Toast.makeText(LoginActivity.this, message, Toast.LENGTH_LONG).show();}
+                            catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
 
-            RequestQueue requestQueue = Volley.newRequestQueue(this);
-            requestQueue.add(stringRequest);
+                    @Override
+                    public void onFailure(Call<LoginResponse> call, Throwable throwable) {
+                        progressDialog.dismiss();
+                        Toast.makeText(LoginActivity.this, "Error: " + throwable.getMessage(), Toast.LENGTH_LONG).show();
+                        Log.d("LoginError", "Error: " + throwable.getMessage());
+                    }
+                });
         }
     }
-}
+    }
+

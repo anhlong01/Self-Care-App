@@ -94,6 +94,14 @@
                         android:drawableLeft="@drawable/location_on_24px"
                         android:textSize="20dp"
                         android:paddingBottom="5dp"/>
+                    <TextView
+                        android:id="@+id/patient_symptom"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Triệu chứng"
+                        android:drawableLeft="@drawable/symptoms_24px"
+                        android:textSize="20dp"
+                        android:paddingBottom="5dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
             <TextView

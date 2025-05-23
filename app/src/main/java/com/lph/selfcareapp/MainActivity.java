@@ -47,8 +47,15 @@ import com.lph.selfcareapp.menu.Chat.ChatActivity;
 import com.lph.selfcareapp.menu.MedicalTicketActivity;
 import com.lph.selfcareapp.menu.account.AccountActivity;
 import com.lph.selfcareapp.menu.account.InfoUserActivity;
+import com.lph.selfcareapp.model.ApiResponse;
+import com.lph.selfcareapp.model.Patient;
+import com.lph.selfcareapp.serviceAPI.RetrofitInstance;
 import com.lph.selfcareapp.stringee.activity.StringeeActivity;
 import com.lph.selfcareapp.tuvanOnline.TuvanActivity;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     Button bookingBtn;
@@ -57,7 +64,7 @@ public class MainActivity extends AppCompatActivity {
     ImageView avatar, tuvanOnline;
     ViewFlipper viewFlipper;
     Animation in, out;
-    Button examBtn, viewResults, reschedule;
+    Button examBtn, viewResults, reschedule, fingerprint;
     private FusedLocationProviderClient fusedLocationClient;
     public static final int REQUEST_LOCATION_PERMISSION = 100;
     public static final int REQUEST_BACKGROUND_LOCATION_PERMISSION = 123;
@@ -73,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
         bottomNavigationView = findViewById(R.id.bottomNavBar);
         bookingBtn = findViewById(R.id.bookingBtn);
         avatar = findViewById(R.id.avatar);
-        tuvanOnline = findViewById(R.id.tuvanOnline);
         viewFlipper = findViewById(R.id.viewFlipper);
         examBtn = findViewById(R.id.examBtn);
         viewResults = findViewById(R.id.viewResultsBtn);
@@ -88,7 +94,34 @@ public class MainActivity extends AppCompatActivity {
         checkLocationSettings();
         askNotificationPermission();
 
+        FirebaseMessaging.getInstance().getToken()
+                .addOnCompleteListener(task -> {
+                    if (!task.isSuccessful()) {
+                        Log.w("FirebaseToken", "Fetching FCM registration token failed", task.getException());
+                        return;
+                    }
 
+                    // Lấy token
+                    String token = task.getResult();
+                    SharedPreferences sp = getSharedPreferences("UserData", MODE_PRIVATE);
+                    String jwt = sp.getString("jwt", "");
+                    int id = sp.getInt("id", 0);
+                    RetrofitInstance.getService(jwt).updateToken(id, token).enqueue(new Callback<ApiResponse<Patient>>() {
+                        @Override
+                        public void onResponse(Call<ApiResponse<Patient>> call, Response<ApiResponse<Patient>> response) {
+                            if(response.isSuccessful())
+                                Log.d("FirebaseToken", "FCM token updated successfully");
+                        }
+
+                        @Override
+                        public void onFailure(Call<ApiResponse<Patient>> call, Throwable throwable) {
+                            Log.d("FirebaseToken", "Failed to update FCM token: " + throwable.getMessage() + "");
+                        }
+                    });
+                    // Ghi log token để kiểm tra trong Logcat
+                    Log.d("FirebaseToken", "Current FCM token: " + token);
+
+                });
 
         // Lấy dữ liệu từ SharedPreferences
         SharedPreferences sharedPreferences = getSharedPreferences("UserData", MODE_PRIVATE);
@@ -115,12 +148,12 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Xử lý sự kiện khi nhấn vào tư vấn online
-        tuvanOnline.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this, TuvanActivity.class));
-            }
-        });
+//        tuvanOnline.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                startActivity(new Intent(MainActivity.this, TuvanActivity.class));
+//            }
+//        });
 
         viewResults.setOnClickListener(new View.OnClickListener() {
             @Override

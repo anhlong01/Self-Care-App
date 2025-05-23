@@ -10,10 +10,12 @@ import androidx.lifecycle.ViewModel;
 import com.lph.selfcareapp.model.ClinicList;
 import com.lph.selfcareapp.model.ClinicRepository;
 
-public class ClinicViewModel extends ViewModel {
-    ClinicRepository clinicRepository = new ClinicRepository();
-    LiveData<ClinicList> clinicListLiveData;
-    public ClinicViewModel() {
+public class ClinicViewModel extends AndroidViewModel {
+    private final LiveData<ClinicList> clinicListLiveData;
+
+    public ClinicViewModel(Application application) {
+        super(application);
+        ClinicRepository clinicRepository = new ClinicRepository(application);
         clinicListLiveData = clinicRepository.getMutableLivedData();
     }
 

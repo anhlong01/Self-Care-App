@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "743813382561",
     "project_id": "self-care-app-dab08",
-    "storage_bucket": "self-care-app-dab08.appspot.com"
+    "storage_bucket": "self-care-app-dab08.firebasestorage.app"
   },
   "client": [
     {

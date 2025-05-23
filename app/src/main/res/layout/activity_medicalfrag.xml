@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:id="@+id/linearLayout2"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/bottom_navigation">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
@@ -20,37 +24,44 @@
                 android:id="@+id/buttonBack"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:src="@drawable/leftback"
+                android:layout_gravity="start"
+                android:layout_marginStart="8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Quay lại"
-                android:layout_gravity="start"
-                android:layout_marginStart="8dp" />
+                android:src="@drawable/leftback" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginStart="16dp"
                 android:text="Hồ sơ bệnh nhân"
                 android:textColor="#FFFFFF"
-                android:textSize="20sp"
-                android:layout_gravity="center"
-                android:layout_marginStart="16dp" />
+                android:textSize="20sp" />
         </androidx.appcompat.widget.Toolbar>
 
         <TextView
             android:id="@+id/textViewProfileInfo"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:padding="16dp"
             android:text="Thông tin hồ sơ bệnh nhân"
             android:textSize="18sp"
-            android:textStyle="bold"
-            android:padding="16dp" />
+            android:textStyle="bold" />
 
 
         <Button
             android:id="@+id/buttonCreateProfile"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tạo Hồ Sơ"
-            android:layout_gravity="center" />
+            android:layout_gravity="center"
+            android:text="Tạo Hồ Sơ" />
     </LinearLayout>
-</ScrollView>
+
+    <include
+        android:id="@+id/bottom_navigation"
+        layout="@layout/bottom_navigation"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

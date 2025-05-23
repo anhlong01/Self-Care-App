@@ -16,22 +16,22 @@ import com.lph.selfcareapp.R;
 import java.io.Serializable;
 
 public class Doctor extends BaseObservable implements Serializable {
-    @SerializedName("doc_id")
+    @SerializedName("docId")
     @Expose
     private Integer docId;
-    @SerializedName("docemail")
+    @SerializedName("docEmail")
     @Expose
-    private String docemail;
-    @SerializedName("docname")
+    private String docEmail;
+    @SerializedName("docName")
     @Expose
-    private String docname;
-    @SerializedName("specialties")
+    private String docName;
+    @SerializedName("clinicId")
     @Expose
-    private Integer specialties;
-    @SerializedName("sname")
+    private Integer clinicId;
+    @SerializedName("specialtiesName")
     @Expose
-    private String sname;
-    @SerializedName("academic_rank")
+    private String specialtiesName;
+    @SerializedName("academicRank")
     @Expose
     private String academicRank;
     @SerializedName("sex")
@@ -39,8 +39,17 @@ public class Doctor extends BaseObservable implements Serializable {
     private String sex;
     @SerializedName("price")
     @Expose
-    private int price;
-    @Bindable
+    private Integer price;
+    @SerializedName("clinicName")
+    @Expose
+    private String clinicName;
+    @SerializedName("phone")
+    @Expose
+    private String phone;
+    @SerializedName("intro")
+    @Expose
+    private String intro;
+
     public Integer getDocId() {
         return docId;
     }
@@ -48,39 +57,39 @@ public class Doctor extends BaseObservable implements Serializable {
     public void setDocId(Integer docId) {
         this.docId = docId;
     }
-    @Bindable
-    public String getDocemail() {
-        return docemail;
+
+    public String getDocEmail() {
+        return docEmail;
     }
 
-    public void setDocemail(String docemail) {
-        this.docemail = docemail;
-    }
-    @Bindable
-    public String getDocname() {
-        return docname;
+    public void setDocEmail(String docEmail) {
+        this.docEmail = docEmail;
     }
 
-    public void setDocname(String docname) {
-        this.docname = docname;
-    }
-    @Bindable
-    public Integer getSpecialties() {
-        return specialties;
+    public String getDocName() {
+        return docName;
     }
 
-    public void setSpecialties(Integer specialties) {
-        this.specialties = specialties;
-    }
-    @Bindable
-    public String getSname() {
-        return sname;
+    public void setDocName(String docName) {
+        this.docName = docName;
     }
 
-    public void setSname(String sname) {
-        this.sname = sname;
+    public Integer getClinicId() {
+        return clinicId;
     }
-    @Bindable
+
+    public void setClinicId(Integer clinicId) {
+        this.clinicId = clinicId;
+    }
+
+    public String getSpecialtiesName() {
+        return specialtiesName;
+    }
+
+    public void setSpecialtiesName(String specialtiesName) {
+        this.specialtiesName = specialtiesName;
+    }
+
     public String getAcademicRank() {
         return academicRank;
     }
@@ -88,7 +97,7 @@ public class Doctor extends BaseObservable implements Serializable {
     public void setAcademicRank(String academicRank) {
         this.academicRank = academicRank;
     }
-    @Bindable
+
     public String getSex() {
         return sex;
     }
@@ -97,21 +106,46 @@ public class Doctor extends BaseObservable implements Serializable {
         this.sex = sex;
     }
 
+    public Integer getPrice() {
+        return price;
+    }
+
+    public void setPrice(Integer price) {
+        this.price = price;
+    }
+
+    public String getClinicName() {
+        return clinicName;
+    }
+
+    public void setClinicName(String clinicName) {
+        this.clinicName = clinicName;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getIntro() {
+        return intro;
+    }
+
+    public void setIntro(String intro) {
+        this.intro = intro;
+    }
+
     @BindingAdapter("docImagePath")
     public static void loadImage(ImageView imageView, String sex){
 
-        if(sex.equals("M"))
+        if(sex.equals("Nam"))
             imageView.setImageResource(R.drawable.maledoctor);
         else
             imageView.setImageResource(R.drawable.femaledoctor);
     }
-
-    @Bindable
-    public int getPrice() {
-        return price;
-    }
-
-    public void setPrice(int price) {
-        this.price = price;
-    }
 }
+
+

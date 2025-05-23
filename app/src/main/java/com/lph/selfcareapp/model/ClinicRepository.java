@@ -1,5 +1,7 @@
 package com.lph.selfcareapp.model;
 
+import android.app.Application;
+import android.content.SharedPreferences;
 import android.util.Log;
 
 import androidx.lifecycle.MutableLiveData;
@@ -10,11 +12,12 @@ import com.lph.selfcareapp.serviceAPI.RetrofitInstance;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-
 public class ClinicRepository {
     private ApiService clinicApiService;
-    public ClinicRepository(){
-        this.clinicApiService = new RetrofitInstance().getService();
+    public ClinicRepository(Application application){
+        SharedPreferences sp = application.getSharedPreferences("UserData", Application.MODE_PRIVATE);
+        String jwt = sp.getString("jwt", "");
+        this.clinicApiService = new RetrofitInstance().getService(jwt);
     }
     public MutableLiveData<ClinicList> getMutableLivedData(){
         MutableLiveData<ClinicList> mutableLiveData =new MutableLiveData<>();
@@ -34,3 +37,4 @@ public class ClinicRepository {
         return mutableLiveData;
     }
 }
+

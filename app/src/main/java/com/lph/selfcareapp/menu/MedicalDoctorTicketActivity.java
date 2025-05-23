@@ -2,25 +2,26 @@ package com.lph.selfcareapp.menu;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.button.MaterialButton;
-import com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx;
 import com.lph.selfcareapp.R;
-import com.lph.selfcareapp.Utils.BottomNavigationViewHelper;
+import com.lph.selfcareapp.Utils.AppointmentComparator;
+import com.lph.selfcareapp.adapter.AppointmentPagingAdapter;
+import com.lph.selfcareapp.adapter.DoctorLoadStateAdapter;
+import com.lph.selfcareapp.factory.PagingAppointmentViewModelFactory;
+import com.lph.selfcareapp.listener.DiagnoseListener;
 import com.lph.selfcareapp.model.Appointment;
 import com.lph.selfcareapp.serviceAPI.RetrofitInstance;
-import com.lph.selfcareapp.view.TicketAdapter;
+import com.lph.selfcareapp.adapter.TicketAdapter;
+import com.lph.selfcareapp.viewmodel.PagingAppointmentsViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,12 +32,16 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 
-public class MedicalDoctorTicketActivity extends AppCompatActivity {
+public class MedicalDoctorTicketActivity extends AppCompatActivity implements DiagnoseListener {
     RecyclerView recyclerView;
     List<Appointment> appointmentList;
     List<Appointment> temp;
     TicketAdapter ticketAdapter;
     TextView navText;
+    int id;
+    String jwt;
+    AppointmentPagingAdapter appointmentPagingAdapter;
+    PagingAppointmentsViewModel appointmentsViewModel;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,36 +49,44 @@ public class MedicalDoctorTicketActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.ticketRecyclerView);
         navText = findViewById(R.id.navText);
         navText.setText("Lịch khám");
-        getTicket();
+        SharedPreferences sp = getSharedPreferences("UserData",MODE_PRIVATE);
+        id = sp.getInt("id",0);
+        appointmentPagingAdapter = new AppointmentPagingAdapter(new AppointmentComparator(), this, this);
+        appointmentsViewModel = new ViewModelProvider(this, new PagingAppointmentViewModelFactory(getApplication(), null, null, null, null, 0, id)).get(PagingAppointmentsViewModel.class);
+        initRecyclerviewAndAdapter();
     }
 
 
 
-    private void getTicket(){
-        SharedPreferences sp = getSharedPreferences("UserData",MODE_PRIVATE);
-        int id = sp.getInt("id",0);
-        new RetrofitInstance().getService().getAppointment2(id).enqueue(new Callback<List<Appointment>>() {
-            @Override
-            public void onResponse(Call<List<Appointment>> call, Response<List<Appointment>> response) {
-                appointmentList = response.body();
-                temp = new ArrayList<>(appointmentList);
-                displayAppointmentRecyclerview();
 
-            }
 
-            @Override
-            public void onFailure(Call<List<Appointment>> call, Throwable throwable) {
+    private void initRecyclerviewAndAdapter() {
 
-            }
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, 1);
+
+        recyclerView.setLayoutManager(gridLayoutManager);
+
+
+        recyclerView.setAdapter(
+                appointmentPagingAdapter.withLoadStateFooter(
+                        new DoctorLoadStateAdapter(view -> {
+                            appointmentPagingAdapter.retry();
+                        })
+                )
+        );
+
+        appointmentsViewModel.appointmentPagingDataLiveData.observe(this, appointmentPagingData -> {
+            appointmentPagingAdapter.submitData(getLifecycle(), appointmentPagingData);
         });
     }
 
-    private void displayAppointmentRecyclerview(){
-        temp = appointmentList.stream().filter(s->s.getHasDone()==0).collect(Collectors.toList());
-        ticketAdapter = new TicketAdapter(this,temp);
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.setAdapter(ticketAdapter);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        ticketAdapter.notifyDataSetChanged();
+    @Override
+    public void uploadDiagnose(Appointment appointment) {
+
+    }
+
+    @Override
+    public void onButtonClicked2(Appointment appointment) {
+
     }
 }

@@ -6,17 +6,9 @@ import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 
 public class ScheduleTime implements Serializable {
-    @SerializedName("schedule_id")
-    @Expose
     private Integer scheduleId;
-    @SerializedName("start_time")
-    @Expose
     private String startTime;
-    @SerializedName("end_time")
-    @Expose
     private String endTime;
-    @SerializedName("booked")
-    @Expose
     private Integer booked;
 
     public Integer getScheduleId() {

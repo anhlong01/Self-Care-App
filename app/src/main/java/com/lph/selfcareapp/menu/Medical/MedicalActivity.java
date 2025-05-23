@@ -2,12 +2,18 @@ package com.lph.selfcareapp.menu.Medical;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.ittianyu.bottomnavigationviewex.BottomNavigationViewEx;
+import com.lph.selfcareapp.MainActivity;
 import com.lph.selfcareapp.R;
+import com.lph.selfcareapp.Utils.BottomNavigationViewHelper;
 
 public class MedicalActivity extends AppCompatActivity {
 
@@ -31,6 +37,7 @@ public class MedicalActivity extends AppCompatActivity {
 
         // Hiển thị thông tin hồ sơ
         displayProfileInfo();
+        setupNavigationView();
     }
 
     // Phương thức để hiển thị thông tin hồ sơ bệnh nhân
@@ -61,5 +68,15 @@ public class MedicalActivity extends AppCompatActivity {
 
         // Hiển thị thông tin hồ sơ lên TextView
         textViewProfileInfo.setText(profileInfo);
+    }
+
+    private void setupNavigationView() {
+        Log.d("Main", "setupTopNavigationView: setting up TopNavigationView");
+        BottomNavigationViewEx tvEx = findViewById(R.id.bottomNavBar);
+        BottomNavigationViewHelper.setupTopNavigationView(tvEx);
+        BottomNavigationViewHelper.enableNavigation(MedicalActivity.this, tvEx);
+        Menu menu = tvEx.getMenu();
+        MenuItem menuItem = menu.getItem(2);
+        menuItem.setChecked(true);
     }
 }

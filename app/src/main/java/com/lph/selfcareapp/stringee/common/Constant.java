@@ -14,7 +14,7 @@ public class Constant {
 
     public static final int INCOMING_CALL_ID = 28011996;
     public static final int MEDIA_SERVICE_ID = 14101997;
-
+    public static final int APPOINTMENT_NOTIFICATION_ID = 14101998;
     public static final String ACTION_START_FOREGROUND_SERVICE = "ACTION_START_FOREGROUND_SERVICE";
 
     public static final String PARAM_BASE = "com.stringee.";

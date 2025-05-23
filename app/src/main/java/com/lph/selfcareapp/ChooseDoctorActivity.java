@@ -1,8 +1,8 @@
 package com.lph.selfcareapp;
 
 import android.app.Dialog;
-import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -31,15 +31,14 @@ import com.applandeo.materialcalendarview.CalendarView;
 import com.applandeo.materialcalendarview.listeners.OnCalendarDayClickListener;
 import com.lph.selfcareapp.model.Clinic;
 import com.lph.selfcareapp.model.Doctor;
-import com.lph.selfcareapp.model.DoctorList;
 import com.lph.selfcareapp.model.ScheduleTime;
 import com.lph.selfcareapp.model.Specialty;
 import com.lph.selfcareapp.model.SpecialtyList;
 import com.lph.selfcareapp.serviceAPI.RetrofitInstance;
-import com.lph.selfcareapp.view.DoctorAdapter;
-import com.lph.selfcareapp.view.TimeAdapter;
-import com.lph.selfcareapp.viewmodel.ChooseDoctorListener;
-import com.lph.selfcareapp.viewmodel.ChooseTImeListener;
+import com.lph.selfcareapp.adapter.DoctorAdapter;
+import com.lph.selfcareapp.adapter.TimeAdapter;
+import com.lph.selfcareapp.listener.ChooseDoctorListener;
+import com.lph.selfcareapp.listener.ChooseTImeListener;
 import com.lph.selfcareapp.viewmodel.SpecialtyViewModel;
 import com.toptoche.searchablespinnerlibrary.SearchableSpinner;
 
@@ -80,6 +79,8 @@ public class ChooseDoctorActivity extends AppCompatActivity implements ChooseDoc
     ImageButton back;
     TextView navText;
     ImageButton imageButton;
+    int clinicId;
+    String jwt;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,6 +90,7 @@ public class ChooseDoctorActivity extends AppCompatActivity implements ChooseDoc
         specialtyViewModel = new ViewModelProvider(this)
                     .get(SpecialtyViewModel.class);
         clinic = (Clinic)getIntent().getSerializableExtra("clinic");
+        clinicId = clinic.getClinic_id();
         back = findViewById(R.id.back);
         back.setOnClickListener(v->finish());
         chiefId = clinic.getChief_id();
@@ -99,12 +101,12 @@ public class ChooseDoctorActivity extends AppCompatActivity implements ChooseDoc
         navText.setText("Chọn lịch khám");
         dialog = new Dialog(ChooseDoctorActivity.this);
         dialog.setContentView(R.layout.dialog_searchable_doctor);
+        SharedPreferences sp =  getSharedPreferences("UserData", MODE_PRIVATE);
+        jwt = sp.getString("jwt", "");
         //set custom width and height
         dialog.getWindow().setLayout(800,1500);
         // set transparent background
         dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-//        Log.e("Intent", String.valueOf(getIntent().getIntExtra("chief id",0)));
-//        chiefId = Integer.parseInt(getIntent().getStringExtra("chief id"));
         getAllSpecialties();
 
     }
@@ -127,7 +129,7 @@ public class ChooseDoctorActivity extends AppCompatActivity implements ChooseDoc
                             chooseDoctor.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
-                                    getAllDoctor(chiefId, speId);
+                                    getAllDoctor(clinicId, speId);
                                 }
                             });
 
@@ -143,7 +145,7 @@ public class ChooseDoctorActivity extends AppCompatActivity implements ChooseDoc
         });
     }
 
-    public void getAllDoctor(int chiefId, int speId){
+    public void getAllDoctor(int clinicId, int speId){
 
         dialog.show();
 
@@ -153,13 +155,13 @@ public class ChooseDoctorActivity extends AppCompatActivity implements ChooseDoc
         imageButton = dialog.findViewById(R.id.filterImageButton);
         imageButton.setOnClickListener(v -> filterDoctor());
 
-        RetrofitInstance.getService().getAllDoctor(chiefId, speId).enqueue(new Callback<List<Doctor>>() {
+        RetrofitInstance.getService(jwt).getAllDoctor(speId, clinicId).enqueue(new Callback<List<Doctor>>() {
             @Override
             public void onResponse(Call<List<Doctor>> call, Response<List<Doctor>> response) {
                 temp = response.body();
                 doctorList = new ArrayList<>(temp);
                 doctorFilterList = new ArrayList<>(temp);
-                doctorAdapter = new DoctorAdapter(ChooseDoctorActivity.this, doctorList,ChooseDoctorActivity.this::onItemClicked);
+                doctorAdapter = new DoctorAdapter(ChooseDoctorActivity.this, doctorList,ChooseDoctorActivity.this);
                 doctorRecyclerView.setAdapter(doctorAdapter);
                 doctorRecyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
                 doctorAdapter.notifyDataSetChanged();
@@ -172,9 +174,9 @@ public class ChooseDoctorActivity extends AppCompatActivity implements ChooseDoc
 
                     @Override
                     public void onTextChanged(CharSequence s, int start, int before, int count) {
-                        doctorAdapter = new DoctorAdapter(getApplicationContext(), doctorList,ChooseDoctorActivity.this::onItemClicked);
+                        doctorAdapter = new DoctorAdapter(getApplicationContext(), doctorList,ChooseDoctorActivity.this);
                         doctorRecyclerView.setAdapter(doctorAdapter);
-                        doctorList = doctorFilterList.stream().filter(e->e.getDocname().toLowerCase().contains(s)).collect(Collectors.toList());
+//                        doctorList = doctorFilterList.stream().filter(e->e.getDocname().toLowerCase().contains(s)).collect(Collectors.toList());
                         doctorAdapter.notifyDataSetChanged();
                     }
 
@@ -198,7 +200,7 @@ public class ChooseDoctorActivity extends AppCompatActivity implements ChooseDoc
     public void onItemClicked(Doctor doctor) {
         chosenDoctor = doctor;
         docId = doctor.getDocId();
-        chooseDoctor.setText(doctor.getAcademicRank() + " " + doctor.getDocname());
+//        chooseDoctor.setText(doctor.getAcademicRank() + " " + doctor.getDocname());
         chooseTime.setText("");
         chooseDate.setText("");
 
@@ -209,6 +211,11 @@ public class ChooseDoctorActivity extends AppCompatActivity implements ChooseDoc
                 getSchedulteDate();
             }
         });
+    }
+
+    @Override
+    public void seeInfo(Doctor doctor) {
+
     }
 
     public void getSchedulteDate(){
@@ -235,12 +242,17 @@ public class ChooseDoctorActivity extends AppCompatActivity implements ChooseDoc
                 if (clickedDayCalendar.getTime().compareTo(min.getTime())>=0
                         &&clickedDayCalendar.getTime().compareTo(max.getTime())<=0){
                     String day = String.valueOf(clickedDayCalendar.get(Calendar.DAY_OF_MONTH));
+                    if(day.length()==1)
+                        day = '0' + day;
+
                     String month = String.valueOf(clickedDayCalendar.get(Calendar.MONTH)+1);
+                    if(month.length()==1)
+                        month = '0' + month;
                     String year = String.valueOf(clickedDayCalendar.get(Calendar.YEAR));
                     dateDialog.dismiss();
                     chooseDate.setText(day+"/"+month+"/"+year);
                     String date = year + "-"+month+"-"+day;
-                    RetrofitInstance.getService().getScheduleTime(docId,date).enqueue(new Callback<List<ScheduleTime>>() {
+                    RetrofitInstance.getService(jwt).getScheduleTime(docId,date).enqueue(new Callback<List<ScheduleTime>>() {
                         @Override
                         public void onResponse(Call<List<ScheduleTime>> call, Response<List<ScheduleTime>> response) {
                             scheduleTimeList = response.body();
@@ -268,7 +280,7 @@ public class ChooseDoctorActivity extends AppCompatActivity implements ChooseDoc
                 timeDialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
                 timeDialog.show();
                 timeRecyclerView = timeDialog.findViewById(R.id.timeRecyclerView);
-                timeAdapter = new TimeAdapter(scheduleTimeList, ChooseDoctorActivity.this,ChooseDoctorActivity.this::onButtonClicked);
+                timeAdapter = new TimeAdapter(scheduleTimeList, ChooseDoctorActivity.this,ChooseDoctorActivity.this::onButtonClicked,-1);
                 timeRecyclerView.setAdapter(timeAdapter);
                 timeRecyclerView.setLayoutManager(new GridLayoutManager(getApplicationContext(),2));
                 timeAdapter.notifyDataSetChanged();
@@ -308,14 +320,14 @@ public class ChooseDoctorActivity extends AppCompatActivity implements ChooseDoc
             if (!checkBox6.isChecked())
                 doctorFilterList = doctorFilterList.stream().filter(s->!s.getSex().equals("F")).collect(Collectors.toList());
             filterDialog.dismiss();
-            doctorAdapter = new DoctorAdapter(getApplicationContext(), doctorFilterList,ChooseDoctorActivity.this::onItemClicked);
+            doctorAdapter = new DoctorAdapter(getApplicationContext(), doctorFilterList,ChooseDoctorActivity.this);
             doctorRecyclerView.setAdapter(doctorAdapter);
             doctorAdapter.notifyDataSetChanged();
         });
     }
 
     @Override
-    public void onButtonClicked(ScheduleTime scheduleTime) {
+    public void onButtonClicked(ScheduleTime scheduleTime, String chosenTime) {
         String starttime = scheduleTime.getStartTime();
         starttime = starttime.substring(0, starttime.length()-3);
         String endtime = scheduleTime.getEndTime();
@@ -337,4 +349,6 @@ public class ChooseDoctorActivity extends AppCompatActivity implements ChooseDoc
             }
         });
     }
+
+
 }
